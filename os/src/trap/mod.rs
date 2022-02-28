@@ -12,6 +12,7 @@ use riscv::register::{
     stval,
     sie,
 };
+use core::arch::*;
 use crate::syscall::syscall;
 use crate::task::{
     exit_current_and_run_next,

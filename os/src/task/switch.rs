@@ -1,6 +1,7 @@
 global_asm!(include_str!("switch.S"));
 
 use super::TaskContext;
+use core::arch::*;
 
 extern "C" {
     pub fn __switch(

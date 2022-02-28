@@ -2,6 +2,7 @@ use super::{PageTable, PageTableEntry, PTEFlags};
 use super::{VirtPageNum, VirtAddr, PhysPageNum, PhysAddr};
 use super::{FrameTracker, frame_alloc};
 use super::{VPNRange, StepByOne};
+use core::arch::*;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use riscv::register::satp;
