@@ -1,6 +1,9 @@
+
+
+use crate::mm::{VirtAddr, PhysAddr};
 use crate::task::{
     suspend_current_and_run_next,
-    exit_current_and_run_next,
+    exit_current_and_run_next, current_translate,
 };
 use crate::timer::get_time_us;
 
@@ -23,14 +26,27 @@ pub fn sys_yield() -> isize {
 }
 
 pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
-    // let _us = get_time_us();
-    // unsafe {
-    //     *ts = TimeVal {
-    //         sec: us / 1_000_000,
-    //         usec: us % 1_000_000,
-    //     };
-    // }
-    // 0
-    
-    get_time_us() as isize
+    let us = get_time_us();
+    let vaddr = VirtAddr::from(_ts as usize);
+    match current_translate(vaddr.floor()) {
+        Some(pte) => {
+            if pte.writable() {
+                let ts = (PhysAddr::from(pte.ppn()).0 + vaddr.page_offset()) as *mut TimeVal;
+                unsafe {
+                    *ts = TimeVal {
+                        sec: us / 1_000_000,
+                        usec: us % 1_000_000,
+                    };
+                }
+                0
+            } else {
+                -1
+            }
+        },
+        None => -1,
+    }
+}
+
+pub fn sys_mmap(start: usize, len: usize, port: usize) -> isize {
+    todo!()
 }

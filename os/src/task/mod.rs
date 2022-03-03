@@ -3,6 +3,7 @@ mod switch;
 mod task;
 
 use crate::loader::{get_num_app, get_app_data};
+use crate::mm::{VirtPageNum, PageTableEntry};
 use crate::trap::TrapContext;
 use crate::sync::UPSafeCell;
 use lazy_static::*;
@@ -149,4 +150,10 @@ pub fn current_user_token() -> usize {
 
 pub fn current_trap_cx() -> &'static mut TrapContext {
     TASK_MANAGER.get_current_trap_cx()
+}
+
+pub fn current_translate(vpn: VirtPageNum) -> Option<PageTableEntry> {
+    let inner = TASK_MANAGER.inner.exclusive_access();
+
+    inner.tasks[inner.current_task].memory_set.translate(vpn)
 }
