@@ -3,7 +3,7 @@ mod switch;
 mod task;
 
 use crate::loader::{get_num_app, get_app_data};
-use crate::mm::{VirtPageNum, PageTableEntry};
+use crate::mm::{VirtPageNum, PageTableEntry, MapPermission};
 use crate::trap::TrapContext;
 use crate::sync::UPSafeCell;
 use lazy_static::*;
@@ -154,6 +154,20 @@ pub fn current_trap_cx() -> &'static mut TrapContext {
 
 pub fn current_translate(vpn: VirtPageNum) -> Option<PageTableEntry> {
     let inner = TASK_MANAGER.inner.exclusive_access();
-
+    // println!("current_translate: {:?} {:?}", vpn, inner.current_task);
     inner.tasks[inner.current_task].memory_set.translate(vpn)
+}
+
+pub fn current_mmap(vpn: VirtPageNum, mpp: MapPermission) -> bool {
+    let mut inner = TASK_MANAGER.inner.exclusive_access();
+    let current_task = inner.current_task;
+    // println!("current_mmap: {:?}, {:?}, {:?}", vpn, mpp, inner.current_task);
+    inner.tasks[current_task].memory_set.mmap(vpn, mpp)
+}
+
+pub fn current_munmap(vpn: VirtPageNum) {
+    let mut inner = TASK_MANAGER.inner.exclusive_access();
+    let current_task = inner.current_task;
+    // println!("current_munmap: {:?} {:?}", vpn, current_task);
+    inner.tasks[current_task].memory_set.munmap(vpn)
 }

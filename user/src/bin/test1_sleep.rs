@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate user_lib;
 
-use user_lib::{get_time, yield_, console::print};
+use user_lib::{get_time, yield_};
 
 /// 正确输出：（无报错信息）
 /// get_time OK! {...}

@@ -42,6 +42,14 @@ pub struct MemorySet {
 }
 
 impl MemorySet {
+    pub fn mmap(&mut self, vpn: VirtPageNum, mpp: MapPermission) -> bool {
+        self.page_table.mmap(vpn, mpp)
+    }
+
+    pub fn munmap(&mut self, vpn: VirtPageNum) {
+        self.page_table.munmap(vpn);
+    }
+
     pub fn new_bare() -> Self {
         Self {
             page_table: PageTable::new(),
@@ -60,6 +68,7 @@ impl MemorySet {
             permission,
         ), None);
     }
+
     fn push(&mut self, mut map_area: MapArea, data: Option<&[u8]>) {
         map_area.map(&mut self.page_table);
         if let Some(data) = data {

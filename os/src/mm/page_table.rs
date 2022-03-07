@@ -1,4 +1,4 @@
-use super::{frame_alloc, PhysPageNum, FrameTracker, VirtPageNum, VirtAddr, StepByOne};
+use super::{frame_alloc, PhysPageNum, FrameTracker, VirtPageNum, VirtAddr, StepByOne, MapPermission};
 use alloc::vec::Vec;
 use alloc::vec;
 use bitflags::*;
@@ -52,6 +52,11 @@ impl PageTableEntry {
         (self.flags() & PTEFlags::X) != PTEFlags::empty()
     }
 }
+impl From<MapPermission> for PTEFlags{
+    fn from(mpp: MapPermission) -> Self {
+        PTEFlags::from_bits(mpp.bits()).unwrap()
+    }
+}
 
 pub struct PageTable {
     root_ppn: PhysPageNum,
@@ -99,12 +104,12 @@ impl PageTable {
         let mut result: Option<&PageTableEntry> = None;
         for i in 0..3 {
             let pte = &ppn.get_pte_array()[idxs[i]];
+            if !pte.is_valid() {
+                return None;
+            }
             if i == 2 {
                 result = Some(pte);
                 break;
-            }
-            if !pte.is_valid() {
-                return None;
             }
             ppn = pte.ppn();
         }
@@ -128,6 +133,31 @@ impl PageTable {
     }
     pub fn token(&self) -> usize {
         8usize << 60 | self.root_ppn.0
+    }
+
+    #[allow(unused)]
+    pub fn mmap(&mut self, vpn: VirtPageNum, mpp: MapPermission) -> bool {
+        let ppn: PhysPageNum;
+        let frame;
+        match frame_alloc() {
+            Some(frmtrk) => {
+                frame = frmtrk;
+            },
+            None => {
+                return false
+            },
+        };
+        ppn = frame.ppn;
+        let pte_flags = PTEFlags::from(mpp);
+        self.map(vpn, ppn, pte_flags);
+        true
+    }
+
+    #[allow(unused)]
+    pub fn munmap(&mut self, vpn: VirtPageNum) {
+        let pte = self.find_pte_create(vpn).unwrap();
+        assert!(pte.is_valid(), "vpn {:?} is invalid before unmapping", vpn);
+        *pte = PageTableEntry::empty();
     }
 }
 
