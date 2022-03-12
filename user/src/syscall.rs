@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 use super::{Stat, TimeVal};
 
 pub const SYSCALL_OPENAT: usize = 56;
